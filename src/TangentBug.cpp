@@ -1,17 +1,25 @@
 #include <iostream>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+#include "Robot.hpp"
+#include "Renderer.hpp"
 
 using namespace std; 
+
+enum State{
+	GO_TO_GOAL,
+	FOLLOW_BOUNDARY
+};
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
     glViewport(0, 0, width, height);
 }
 
+
 int main()
-{
-    if (!glfwInit())
+{	
+	if (!glfwInit())
     {
         cout << "Failed to initialize GLFW" << endl;
         return -1;
@@ -23,7 +31,7 @@ int main()
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
     GLFWwindow* window;
-    window = glfwCreateWindow(800, 600, "ZMMR", NULL, NULL);
+    window = glfwCreateWindow(800, 600, "Tangent Bug", NULL, NULL);
     if (window == NULL)
     {
         cout << "Failed to open GLFW window" << endl;
