@@ -57,7 +57,7 @@ int main()
 
 		float aspect = (float)window_width / (float)window_height;
 
-		glm::mat4 projection = glm::ortho(aspect*-7.5f, aspect*7.5f, 	-7.5f, 7.5f, -1.0f, 1.0f);
+		glm::mat4 projection = glm::ortho(aspect*-10.0f, aspect*10.f, -10.0f, 10.0f, -1.0f, 1.0f);
 
 		glm::mat4 view = glm::mat4(1.0f); 
  
@@ -65,8 +65,21 @@ int main()
 				
     glViewport(0, 0, window_width, window_height);
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-		ShapeData bug = createCircle(0.5f, 0.0f, 0.0f, 32);
-		Renderer bugRenderer(bug.vertices, bug.indices);
+
+		std::vector<Entity> obstacles;
+		ShapeData rectData = createRectangle(2.0f, 1.0f);
+		ShapeData squareData = createRectangle(1.0f, 1.0f);
+		ShapeData circleData = createCircle(0.5, 0.0f, 0.0f, 32);
+
+		Renderer* rectRenderer = new Renderer(rectData.vertices, rectData.indices);
+		Renderer* squareRenderer = new Renderer(squareData.vertices, squareData.indices);
+		Renderer* circleRenderer = new Renderer(circleData.vertices, circleData.indices);
+		obstacles.push_back({EntityType::GOAL, circleRenderer, glm::vec2(12.0f, 8.0f), 0.0f, 0.7f, glm::vec3(1.0f, 1.0f, 0.0f)});
+		obstacles.push_back({EntityType::OBSTACLE, rectRenderer, glm::vec2(3.0f, 2.0f), 0.0f, 1.0f, glm::vec3(0.5f)});
+		obstacles.push_back({EntityType::OBSTACLE, squareRenderer, glm::vec2(-2.0f, 2.0f), 0.0f, 1.5f, glm::vec3(1.0f, 0.0f, 0.0f)});
+		obstacles.push_back({EntityType::SENSOR, circleRenderer, glm::vec2(-12.0f, -9.0f), 0.0f, 1.0f, glm::vec3(0.3f, 0.3f, 1.0f), GL_LINE_LOOP});
+		obstacles.push_back({EntityType::ROBOT, circleRenderer, glm::vec2(-12.0f, -9.0f), 0.0f, 0.7f, glm::vec3(1.0f, 1.0f, 0.0f)});
+		
     while(!glfwWindowShouldClose(window))
 		{
 			glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
@@ -82,8 +95,9 @@ int main()
 
 			glm::mat4 mvp = projection * view * modelMatrix;
 
-			bugRenderer.draw(shader.ID, mvp, modelMatrix, robotColor);
-
+			for(Entity obstacle:obstacles){
+				obstacle.draw(shader.ID, projection * view);
+			}
 			glfwSwapBuffers(window);
 			glfwPollEvents();    
 		}

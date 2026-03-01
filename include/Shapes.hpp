@@ -24,7 +24,7 @@ ShapeData createEquilateralTriangle(float size){
   return data; 
 }
 
-ShapeData createRectangle(float width, float height, float centerX, float centerY){
+ShapeData createRectangle(float width, float height){
 		float hh = height/2.0f;
 		float hw = width/2.0f;
 		ShapeData data;
@@ -34,10 +34,13 @@ ShapeData createRectangle(float width, float height, float centerX, float center
 			-hw, hh,
 			hw, hh
 		};
+
 		data.indices = {
 			0, 1, 2,
-			2, 3, 0
+			2, 3, 1
 		};
+
+		return data;
 	}
 ShapeData createCircle(float radius, float centerX, float centerY, int segments){
 	ShapeData data;
