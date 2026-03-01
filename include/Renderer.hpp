@@ -11,7 +11,7 @@ class Renderer{
     unsigned int indexCount;
 
     public:
-    Renderer(const vector<float> vertices, const vector<unsigned int> indices):indexCount(indices.size()){
+    Renderer(const std::vector<float>& vertices, const std::vector<unsigned int>& indices):indexCount(indices.size()){
         glGenVertexArrays(1, &VAO);
         glGenBuffers(1, &VBO);
         glGenBuffers(1, &EBO);
@@ -24,18 +24,17 @@ class Renderer{
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size()*sizeof(unsigned int), indices.data(), GL_STATIC_DRAW);
         
-        GLsizei stride = 6*sizeof(float);
+        GLsizei stride = 2*sizeof(float);
 
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, stride, (void*)0);
+        glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, stride, (void*)0);
         glEnableVertexAttribArray(0);
-
-        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, stride, (void*)(3*sizeof(float)));
-        glEnableVertexAttribArray(1);
 
         glBindVertexArray(0);
     }
 
-    void draw(unsigned int shaderProgram, const glm::mat4 mvp, const glm::mat4& model, const glm::vec3& color){
+    void draw(unsigned int shaderProgram, const glm::mat4 mvp, const glm::mat4& model, const glm::vec3& color, GLenum drawMode = GL_TRIANGLES){
+				glUseProgram(shaderProgram);
+
         int mvpLocation = glGetUniformLocation(shaderProgram, "u_MVP"); 
         int modelLocation = glGetUniformLocation(shaderProgram, "u_Model"); 
         int colorLocation = glGetUniformLocation(shaderProgram, "u_ObjectColor"); 
@@ -45,7 +44,7 @@ class Renderer{
         glUniform3fv(colorLocation, 1, glm::value_ptr(color));
 
         glBindVertexArray(VAO);
-        glDrawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, nullptr);
+        glDrawElements(drawMode, indexCount, GL_UNSIGNED_INT, nullptr);
         glBindVertexArray(0);
     }
 
