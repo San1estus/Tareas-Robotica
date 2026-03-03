@@ -2,12 +2,17 @@
 #define ENTITY_H
 #include "Renderer.hpp"
 #include <glad/glad.h>
-
+#include "Shapes.hpp"
 enum class EntityType{
 	ROBOT,
 	OBSTACLE,
 	GOAL,
 	SENSOR
+};
+
+enum class ShapeType{
+	CIRCLE,
+	POLYGON
 };
 
 struct Entity{
@@ -17,6 +22,8 @@ struct Entity{
 	float rotation;
 	float scale;
 	glm::vec3 color;
+	ShapeType shape;
+	ShapeData data;
 	GLenum drawMode = GL_TRIANGLES;
 
 	void draw(unsigned int shaderID, const glm::mat4& viewProj){

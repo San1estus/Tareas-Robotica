@@ -7,6 +7,7 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <vector>
 const float pi =  acos(-1);
+
 struct ShapeData{
 	std::vector<float> vertices;
 	std::vector<unsigned int> indices;
