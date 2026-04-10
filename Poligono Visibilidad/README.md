@@ -1,7 +1,3 @@
-
-
-https://github.com/user-attachments/assets/70a2f419-7ab5-4042-9aa9-f3436deb335d
-
 # Reporte de funcionamiento del código
 
 ## Simulador
