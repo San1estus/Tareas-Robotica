@@ -16,18 +16,21 @@ Se utilizan 3 estructuras principales:
 
 ## Geometría usada
 Además de la librería de cmath, se agregaron las funciones
-crossProduct, que devuelve del producto cruz de dos vectores $\mathbf{x,y}\in \R^2$, es decir $$crossProduct(\mathbf{x,y})=x_1y_2-x_2y_1.$$
+crossProduct, que devuelve del producto cruz de dos vectores $\mathbf{x,y}\in \mathbb{R}^2$, es decir $$crossProduct(\mathbf{x,y})=x_1y_2-x_2y_1.$$
 
 y getRaySegmentIntersection que identifica si hay una colisión con algún segmento y el punto donde colisiona, se asume rango infinito para la visibilidad. 
 
 Para hacer esto tomamos el vector $\mathbf{s}$ que sale del punto inicial del segmento $\mathbf{a}$ al punto final del segmento $\mathbf{b}$ y además el vector $\mathbf{r}$ que va desde el observador $\mathbf{o}$ hacía el inicio del segmento. Podemos parametrizar estos vectores como
 $$\mathbf{r}(t)=\mathbf{o}+t\cdot (\mathbf{a-o})=\mathbf{o}+t\cdot \mathbf{c}\quad\text{y}\quad \mathbf{s}(u) = \mathbf{a}+u\cdot (\mathbf{b-a}) = \mathbf{a}+u\cdot\mathbf{d},$$
+
 donde $t,u$ son parametros que nos indican en que punto estan en el tiempo $t$ y $u$ respectivamente. Para encontrar el punto donde esto pasa, nos interesa resolver la ecuación
 $$\mathbf{o}+t\cdot \mathbf{c}=\mathbf{a}+u\cdot\mathbf{d}\Leftrightarrow t\cdot\mathbf{c}-u\cdot\mathbf{d}=\mathbf{a-o},$$
+
 pero antes podemos realizar el producto cruz entre $\mathbf{c}$ y $\mathbf{d}$, si este producto es cercano a $0$, entonces los vectores son paralelos. Si no es el caso, podemos despejar $t$ haciendo producto cruz con $\mathbf{d}$ en ambas ecuaciones recordando que el producto  de un vector consigo mismo es siempre $0$ y que este es bilineal, se obtiene 
 $$(t\cdot\mathbf{c}-u\cdot\mathbf{d})\times\mathbf{d}=(\mathbf{a-o})\times\mathbf{d}=t\cdot \mathbf{c}\times\mathbf{d}=(\mathbf{a-o})\times d,$$
 de manera analóga se obtiene $u$ pero haciendo producto cruz con $\mathbf{c}$. Si esto tiene solución, resta ver que el punto de impacto este en el segmento y ocurre enfrente del observador, para esto notamos que $\mathbf{s}(0)=a$ y $\mathbf{s}(1)=b$, por lo tanto se debe satisfacer que
 $$0\leq u\leq 1\quad\text{y}\quad t>0,$$
+
 si es el caso, regresa el tiempo $t$ que se encontro que nos indica en que parte del segmento se da el impacto.
 
 
