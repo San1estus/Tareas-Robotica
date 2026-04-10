@@ -39,7 +39,6 @@ glm::vec2 screenToWorld(double x,double y)
 
 void mouseCallback(GLFWwindow* window,int button,int action,int mods)
 {
-
     if(button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS)
     {
 
@@ -52,25 +51,18 @@ void mouseCallback(GLFWwindow* window,int button,int action,int mods)
 
         std::cout<<"Vertex added\n";
     }
-
 }
 
 void keyCallback(GLFWwindow* window,int key,int scancode,int action,int mods)
 {
-
     if(action == GLFW_PRESS)
     {
-
         if(key == GLFW_KEY_ENTER)
         {
-
             if(editor.finishPolygon(obstacles))
                 std::cout<<"Polygon created\n";
-
         }
-
     }
-
 }
 
 void framebuffer_size_callback(GLFWwindow* window,int width,int height)
@@ -181,8 +173,8 @@ int main()
 				robot.position.x, robot.position.y,
 				end.x, end.y
 			};
-
 		}
+
         controller.update(robot,goal,obstacles,deltaTime);
 
         glm::mat4 viewProj = projection * view;
