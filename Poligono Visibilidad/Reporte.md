@@ -1,3 +1,7 @@
+
+
+https://github.com/user-attachments/assets/70a2f419-7ab5-4042-9aa9-f3436deb335d
+
 # Reporte de funcionamiento del código
 
 ## Simulador
@@ -34,4 +38,10 @@ Para calcular el polígono de visibilidad, tomamos todos los segmentos que hay e
 ## Uso del simulador
 
 El simulador tiene 2 modos, uno para dibujar y otro para "iluminar", dando click en la pantalla se añade un vértices, se pueden añadir los vértices que quieran, dando Enter se forma un polígono conectando el último vértice y el primero y se pueden seguir dibujando. Entre tanto se puede presionar el Espacio para cambiar de modo, cuando "ilumina" se muestra el polígono de visibilidad. Con $R$ se reinicia el entorno borrando todos los polígonos.
+
+
+
+https://github.com/user-attachments/assets/31b57216-820e-4497-8773-2a2559ce2ab6
+
+
 
