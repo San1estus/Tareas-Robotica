@@ -8,13 +8,13 @@
             "args": [
                 "-g",
                 "-std=c++17",
-                "-I${workspaceFolder}\\include",
-                "-L${workspaceFolder}\\lib",
-                "${workspaceFolder}\\src\\TangentBug.cpp",
-                "${workspaceFolder}\\src\\glad.c",
+                "-I${workspaceFolder}\\Poligono Visibilidad\\include",
+                "-L${workspaceFolder}\\Poligono Visibilidad\\lib",
+                "${workspaceFolder}\\Poligono Visibilidad\\src\\VisibilityPolygon.cpp",
                 "-lglfw3dll",
+				"-lopengl32",
                 "-o",
-                "${workspaceFolder}\\tangentBug.exe"
+                "${workspaceFolder}\\visibilityPolygon.exe"
             ],
             "options": {
                 "cwd": "${workspaceFolder}"
@@ -25,8 +25,7 @@
             "group": {
                 "kind": "build",
                 "isDefault": true
-            },
-            "detail": "compiler: C:/C:/path/to/g++.exe"
+            }
         }
     ]
 }
