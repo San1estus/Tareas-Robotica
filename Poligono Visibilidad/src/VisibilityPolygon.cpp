@@ -100,6 +100,7 @@ vector<Point> calculateVisibilityPolygon(Point p, const vector<Segment>& segment
     for (const auto& ap : detectedPoints) {
         resultPoly.push_back(ap.p);
     }
+
     if (!resultPoly.empty()) {
         resultPoly.push_back(resultPoly[0]);
     }
