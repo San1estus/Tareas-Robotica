@@ -31,5 +31,5 @@ Cuando el robot encuentra un obstáculo calcula la normal al obstáculo más cer
 
 El simulador tiene 2 modos, uno para dibujar y otro para correr. Dando click en la pantalla se añade un vértice, se pueden añadir los vértices que quieran, dando C se forma un polígono conectando el último vértice y el primero y se pueden seguir dibujando. Al terminar de dibujar los poligonos, presionar Enter para correr la simulación. Con R se puede reiniciar el entorno para intentar algo nuevo.
 
-
-
+## Video demostración
+En el primero se muestra un caso simple, un caso con múltiples obstáculos, un caso con un obstáculo concavo y un caso dónde no hay solución, en este caso el robot se detiene.
