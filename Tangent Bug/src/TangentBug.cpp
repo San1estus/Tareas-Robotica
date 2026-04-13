@@ -270,7 +270,7 @@ Vec2 s2w(double sx, double sy) {
              (float)((H - sy) / H) * 2 * WORLD - WORLD };
 }
 
-void mouseBtn(GLFWwindow* w, int btn, int act, int) {
+void mouse_button_callback(GLFWwindow* w, int btn, int act, int) {
     if (!drawing) return;
     if (btn == GLFW_MOUSE_BUTTON_LEFT && act == GLFW_PRESS) {
         double x, y; glfwGetCursorPos(w, &x, &y);
@@ -278,7 +278,7 @@ void mouseBtn(GLFWwindow* w, int btn, int act, int) {
     }
 }
 
-void keyBtn(GLFWwindow*, int key, int, int act, int) {
+void key_callback(GLFWwindow*, int key, int, int act, int) {
     if (act != GLFW_PRESS) return;
     if (key == GLFW_KEY_C && building.size() >= 3) {
         obstacles.push_back({building}); building.clear();
@@ -294,8 +294,8 @@ int main() {
     glfwInit();
     GLFWwindow* win = glfwCreateWindow(W, H, "Tangent Bug", NULL, NULL);
     glfwMakeContextCurrent(win);
-    glfwSetMouseButtonCallback(win, mouseBtn);
-    glfwSetKeyCallback(win, keyBtn);
+    glfwSetMouseButtonCallback(win, mouse_button_callback);
+    glfwSetKeyCallback(win, key_callback);
     glMatrixMode(GL_PROJECTION); glLoadIdentity(); glOrtho(0, W, H, 0, -1, 1);
     glEnable(GL_BLEND); glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 

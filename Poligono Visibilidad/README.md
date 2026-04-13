@@ -6,9 +6,9 @@ Para realizar las simulaciones se uso OpenGL Legacy usando GLFW, para no meterme
 ## Estructuras definidas
 Se utilizan 3 estructuras principales:
 
-- Point: Esta almacena las coordenadas $(x,y)$ de los vertices de los poligonos en coordenadas del mundo/pantalla.
+- Vec2: Esta almacena las coordenadas $(x,y)$ de los vertices de los poligonos en coordenadas del mundo/pantalla.
 - Segment: Se le asignan dos puntos, uno de inicio y uno de final, para indicar que es el segmento que une estos puntos.
-- AngularPoint: Similar a point, pero ademas almacena el angulo respecto al observador (el punto de donde se calcula el polígono de visibilidad), y la distancia a este punto respecto al observador, el angulo sirve a la hora de calcular el polígono. Se usa el ángulo en sentido antihorario.
+- AngularPoint: Similar a Vec2, pero ademas almacena el angulo respecto al observador (el punto de donde se calcula el polígono de visibilidad), y la distancia a este punto respecto al observador, el angulo sirve a la hora de calcular el polígono. Se usa el ángulo en sentido antihorario.
 
 ## Geometría usada
 Además de la librería de cmath, se agregaron las funciones
@@ -43,7 +43,7 @@ Para calcular el polígono de visibilidad, tomamos todos los segmentos que hay e
 
 ## Uso del simulador
 
-El simulador tiene 2 modos, uno para dibujar y otro para "iluminar", dando click en la pantalla se añade un vértices, se pueden añadir los vértices que quieran, dando Enter se forma un polígono conectando el último vértice y el primero y se pueden seguir dibujando. Entre tanto se puede presionar el Espacio para cambiar de modo, cuando "ilumina" se muestra el polígono de visibilidad. Con $R$ se reinicia el entorno borrando todos los polígonos.
+El simulador tiene 2 modos, uno para dibujar y otro para "iluminar", dando click en la pantalla se añade un vértices, se pueden añadir los vértices que quieran, dando Enter o C se forma un polígono conectando el último vértice y el primero y se pueden seguir dibujando. Entre tanto se puede presionar el Espacio para cambiar de modo, cuando "ilumina" se muestra el polígono de visibilidad. Con $R$ se reinicia el entorno borrando todos los polígonos.
 
 
 

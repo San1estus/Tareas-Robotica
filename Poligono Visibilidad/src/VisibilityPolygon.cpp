@@ -8,18 +8,18 @@ using namespace std;
 
 const float PI = acos(-1);
 
-struct Point {
+struct Vec2 {
     float x, y;
-    Point(float _x = 0.0f, float _y = 0.0f) : x(_x), y(_y) {}
+    Vec2(float _x = 0.0f, float _y = 0.0f) : x(_x), y(_y) {}
 };
 
 struct Segment {
-    Point a, b;
-    Segment(Point _a, Point _b) : a(_a), b(_b) {}
+    Vec2 a, b;
+    Segment(Vec2 _a, Vec2 _b) : a(_a), b(_b) {}
 };
 
 struct AngularPoint {
-    Point p;
+    Vec2 p;
     float angle;
     float dist;
     bool operator<(const AngularPoint& other) const {
@@ -28,10 +28,10 @@ struct AngularPoint {
 };
 
 // --- Variables Globales Modificadas para Múltiples Polígonos ---
-vector<vector<Point>> polygons;  // Almacena los polígonos ya terminados
-vector<Point> currentPolygon;    
+vector<vector<Vec2>> polygons;  // Almacena los polígonos ya terminados
+vector<Vec2> currentPolygon;    
 bool visibilityMode = false;     
-Point currentMousePos(0, 0);
+Vec2 currentMousePos(0, 0);
 
 int window_width;
 int window_height;
@@ -39,13 +39,13 @@ float orthoAspectX = 10.0f;
 float orthoY = 10.0f;
 
 // --- Matemáticas y Visibilidad ---
-float crossProduct(Point a, Point b) {
+float crossProduct(Vec2 a, Vec2 b) {
     return (a.x * b.y) - (a.y * b.x);
 }
 
-float getRaySegmentIntersection(Point p, Point r, Point a, Point b) {
-    Point s = {b.x - a.x, b.y - a.y};
-    Point q_minus_p = {a.x - p.x, a.y - p.y};
+float getRaySegmentIntersection(Vec2 p, Vec2 r, Vec2 a, Vec2 b) {
+    Vec2 s = {b.x - a.x, b.y - a.y};
+    Vec2 q_minus_p = {a.x - p.x, a.y - p.y};
 
     float r_cross_s = crossProduct(r, s);
 
@@ -60,9 +60,9 @@ float getRaySegmentIntersection(Point p, Point r, Point a, Point b) {
     return -1.0f;
 }
 
-vector<Point> calculateVisibilityPolygon(Point p, const vector<Segment>& segments) {
+vector<Vec2> calculateVisibilityPolygon(Vec2 p, const vector<Segment>& segments) {
     vector<AngularPoint> detectedPoints;
-    vector<Point> endpoints;
+    vector<Vec2> endpoints;
     
     for (const auto& seg : segments) {
         endpoints.push_back(seg.a);
@@ -76,7 +76,7 @@ vector<Point> calculateVisibilityPolygon(Point p, const vector<Segment>& segment
 
         for (int i = 0; i < 3; ++i) {
             float ang = angles[i];
-            Point r = {cos(ang), sin(ang)}; 
+            Vec2 r = {cos(ang), sin(ang)}; 
             
             float minT = INFINITY; 
             
@@ -88,7 +88,7 @@ vector<Point> calculateVisibilityPolygon(Point p, const vector<Segment>& segment
             }
 
             if (minT != INFINITY) {
-                Point result = {p.x + r.x * minT, p.y + r.y * minT};
+                Vec2 result = {p.x + r.x * minT, p.y + r.y * minT};
                 detectedPoints.push_back({result, ang, minT});
             }
         }
@@ -96,7 +96,7 @@ vector<Point> calculateVisibilityPolygon(Point p, const vector<Segment>& segment
 
     sort(detectedPoints.begin(), detectedPoints.end());
 
-    vector<Point> resultPoly;
+    vector<Vec2> resultPoly;
     for (const auto& ap : detectedPoints) {
         resultPoly.push_back(ap.p);
     }
@@ -120,8 +120,8 @@ vector<Segment> getSceneSegments() {
     }
 
     float b = 50.0f; 
-    Point tl(-b,  b), tr( b,  b);
-    Point bl(-b, -b), br( b, -b);
+    Vec2 tl(-b,  b), tr( b,  b);
+    Vec2 bl(-b, -b), br( b, -b);
 
     segments.push_back(Segment(tl, tr)); 
     segments.push_back(Segment(tr, br)); 
@@ -259,7 +259,7 @@ int main() {
         // Modo Visibilidad
         if (visibilityMode) {
             vector<Segment> scene = getSceneSegments();
-            vector<Point> visPoly = calculateVisibilityPolygon(currentMousePos, scene);
+            vector<Vec2> visPoly = calculateVisibilityPolygon(currentMousePos, scene);
 
             if (!visPoly.empty()) {
                 glColor4f(1.0f, 1.0f, 0.0f, 0.5f); 
