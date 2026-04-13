@@ -8,13 +8,13 @@
             "args": [
                 "-g",
                 "-std=c++17",
-                "-I${workspaceFolder}\\Poligono Visibilidad\\include",
-                "-L${workspaceFolder}\\Poligono Visibilidad\\lib",
-                "${workspaceFolder}\\Poligono Visibilidad\\src\\VisibilityPolygon.cpp",
+                "-I${workspaceFolder}\\Tangent Bug\\include",
+                "-L${workspaceFolder}\\Tangent Bug\\lib",
+                "${workspaceFolder}\\Tangent Bug\\src\\TangentBug.cpp",
                 "-lglfw3dll",
 				"-lopengl32",
                 "-o",
-                "${workspaceFolder}\\visibilityPolygon.exe"
+                "${workspaceFolder}\\tangentBug.exe"
             ],
             "options": {
                 "cwd": "${workspaceFolder}"

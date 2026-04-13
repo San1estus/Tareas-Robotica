@@ -1,198 +1,247 @@
-#include <iostream>
-#include <vector>
-
-#include <glad/glad.h>
 #include <GLFW/glfw3.h>
+#include <vector>
+#include <cmath>
+#include <algorithm>
 
-#include "Entity.hpp"
-#include "Renderer.hpp"
-#include "Shapes.hpp"
-#include "Shader.hpp"
+// Variables de la simulación
+const int   W = 800;
+const int   H = 800;
+const float WORLD = 10.0f;
+const float PI = acos(-1.0f);
+const float RADIUS = 0.20f;
+const float STEP_SPEED = 0.005f;
 
-#include "TangentBugController.hpp"
-#include "PolygonEditor.hpp"
+// Estructuras de datos adicionales
 
-using namespace std;
+struct Vec2 {
+    float x = 0, y = 0;
+    Vec2 operator+(Vec2 o)  const { return {x + o.x, y + o.y}; }
+    Vec2 operator-(Vec2 o)  const { return {x - o.x, y - o.y}; }
+    Vec2 operator*(float s) const { return {x * s, y * s}; }
+    float dot(Vec2 o)       const { return x * o.x + y * o.y; }
+    float len()             const { return std::sqrt(x * x + y * y); }
+    Vec2  norm()            const { float l = len(); return l > 1e-6f ? Vec2{x / l, y / l} : Vec2{0, 0}; }
+};
 
-PolygonEditor editor;
-std::vector<Entity> obstacles;
+struct Polygon { std::vector<Vec2> pts; };
 
-TangentBugController controller;
+std::vector<Polygon> obstacles;
+std::vector<Vec2>    building;
+bool drawing = true;
+Vec2 goal    = {6, 6};
 
-int window_width;
-int window_height;
-
-glm::vec2 screenToWorld(double x,double y)
-{
-    float aspect = (float)window_width / (float)window_height;
-
-    float worldX =
-        ((float)x / window_width) * (20.0f * aspect)
-        - 10.0f * aspect;
-
-    float worldY =
-        10.0f
-        - ((float)y / window_height) * 20.0f;
-
-    return glm::vec2(worldX,worldY);
+bool segmentsIntersect(Vec2 p1, Vec2 p2, Vec2 p3, Vec2 p4) {
+    Vec2 d1 = p2 - p1, d2 = p4 - p3;
+    float den = d1.x * d2.y - d1.y * d2.x;
+    if (std::fabs(den) < 1e-6f) return false;
+    Vec2 d3 = p3 - p1;
+    float t = (d3.x * d2.y - d3.y * d2.x) / den;
+    float u = (d3.x * d1.y - d3.y * d1.x) / den;
+    return t > 0.01f && t < 0.99f && u > 0.01f && u < 0.99f;
 }
 
-void mouseCallback(GLFWwindow* window,int button,int action,int mods)
-{
-    if(button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS)
-    {
+// Robot
 
-        double posX,posY;
-        glfwGetCursorPos(window,&posX,&posY);
+struct Robot {
+    Vec2 pos = {-6, -6};
+    std::vector<Vec2> trail;
+    int  followDir  = 0;
+    bool dirLocked  = false;
+    Vec2 lastMoveDir = {1, 0};
 
-        glm::vec2 world = screenToWorld(posX,posY);
+	Vec2  orbitStart    = {};
+    bool  orbitLeft     = false;
+    bool  unreachable   = false;
 
-        editor.addVertex(world);
+    void update();
+    void applyPhysics();
+	private:
+    bool lineOfSightClear() const;
+};
 
-        std::cout<<"Vertex added\n";
+bool Robot::lineOfSightClear() const {
+    for (const auto& poly : obstacles) {
+        int n = poly.pts.size();
+        for (int i = 0; i < n; i++) {
+            if (segmentsIntersect(pos, goal, poly.pts[i], poly.pts[(i+1)%n]))
+                return false;
+        }
     }
+    return true;
 }
 
-void keyCallback(GLFWwindow* window,int key,int scancode,int action,int mods)
-{
-    if(action == GLFW_PRESS)
-    {
-        if(key == GLFW_KEY_ENTER)
-        {
-            if(editor.finishPolygon(obstacles))
-                std::cout<<"Polygon created\n";
+void Robot::update() {
+    if (trail.empty() || (trail.back() - pos).len() > 0.1f)
+        trail.push_back(pos);
+
+    // Encontrar el punto más cercano en cualquier obstáculo y su normal
+    float minDist = 1e9f;
+    Vec2  closestPt = {};
+    Vec2  wallNormal = {};
+
+    for (const auto& poly : obstacles) {
+        int n = poly.pts.size();
+        for (int i = 0; i < n; i++) {
+            Vec2 a = poly.pts[i], b = poly.pts[(i+1)%n];
+            Vec2 ab = b-a, ap = pos-a;
+            float t = std::max(0.f, std::min(1.f, ap.dot(ab)/ab.dot(ab)));
+            Vec2 cl = a + ab*t;
+            float d = (pos-cl).len();
+            if (d < minDist) {
+                minDist = d;
+                closestPt = cl;
+                wallNormal = (pos-cl).norm();
+            }
+        }
+    }
+
+    const float ORBIT_DIST = RADIUS * 1.5f; 
+
+    if (!dirLocked) {
+        // Si no hay obstáculo cercano, avanzar directo al objetivo
+        if (minDist > ORBIT_DIST) {
+            lastMoveDir = (goal - pos).norm();
+            pos = pos + lastMoveDir * STEP_SPEED;
+        } else {
+            // Al entrar en contacto con un obstáculo, decidir dirección de seguimiento
+            Vec2 t1 = {-wallNormal.y,  wallNormal.x}; // tangente CCW
+            Vec2 t2 = { wallNormal.y, -wallNormal.x}; // tangente CW
+            followDir = (t1.dot(lastMoveDir) >= 0) ? +1 : -1;
+            dirLocked = true;
+        }
+    } else {
+		// Antes de continuar orbitando verificamos si el camino directo al objetivo está despejado
+		if (lineOfSightClear()) {
+            dirLocked = false;
+            lastMoveDir = (goal - pos).norm();
+            pos = pos + lastMoveDir * STEP_SPEED;
+            applyPhysics();
+            return;
+        }
+
+        // Seguir la pared en la dirección elegida
+        Vec2 t1 = {-wallNormal.y,  wallNormal.x};
+        Vec2 t2 = { wallNormal.y, -wallNormal.x};
+        Vec2 tangent = (followDir > 0) ? t1 : t2;
+
+        // Corrección suave para mantener distancia de la pared
+        float error = ORBIT_DIST - minDist; 
+        Vec2 correction = wallNormal * error * 0.3f;
+
+        pos = pos + tangent * STEP_SPEED + correction;
+        lastMoveDir = tangent;
+    }
+
+    applyPhysics();
+}
+
+// Física de colisiones simple para evitar que el robot atraviese paredes
+void Robot::applyPhysics() {
+    for (const auto& poly : obstacles) {
+        int n = poly.pts.size();
+        for (int i = 0; i < n; i++) {
+            Vec2 a = poly.pts[i], b = poly.pts[(i + 1) % n];
+            Vec2 ap = pos - a, ab = b - a;
+            float t = std::max(0.f, std::min(1.f, ap.dot(ab) / ab.dot(ab)));
+            Vec2 closest = a + ab * t;
+            float d = (pos - closest).len();
+            if (d < RADIUS)
+                pos = pos + (pos - closest).norm() * (RADIUS - d + 0.001f);
         }
     }
 }
+Robot robot;
 
-void framebuffer_size_callback(GLFWwindow* window,int width,int height)
-{
-    glViewport(0,0,width,height);
+// Renderizado
 
-    window_width = width;
-    window_height = height;
+void toScreen(Vec2 p, float& sx, float& sy) {
+    sx = (p.x + WORLD) / (2 * WORLD) * W;
+    sy = H - (p.y + WORLD) / (2 * WORLD) * H;
 }
 
-int main()
-{
+void drawCircle(Vec2 c, float r) {
+    float cx, cy; toScreen(c, cx, cy);
+    float rx = r / (2 * WORLD) * W;
+    glBegin(GL_TRIANGLE_FAN);
+    for (int i = 0; i <= 32; i++) {
+        float a = i / 32.f * 2 * PI;
+        glVertex2f(cx + cosf(a) * rx, cy + sinf(a) * rx);
+    }
+    glEnd();
+}
 
-    if(!glfwInit())
-        return -1;
+void drawScene() {
+    glColor3f(0.8f, 0.8f, 0.8f);
+    glLineWidth(2.0f);
+    for (auto& p : obstacles) {
+        glBegin(GL_LINE_LOOP);
+        for (auto& v : p.pts) { float x, y; toScreen(v, x, y); glVertex2f(x, y); }
+        glEnd();
+    }
 
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR,3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR,3);
-    glfwWindowHint(GLFW_OPENGL_PROFILE,GLFW_OPENGL_CORE_PROFILE);
+    if (!building.empty()) {
+        glColor3f(1, 1, 0);
+        glBegin(GL_LINE_STRIP);
+        for (auto& p : building) { float x, y; toScreen(p, x, y); glVertex2f(x, y); }
+        glEnd();
+    }
 
-    const GLFWvidmode* mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
+    glColor4f(0.0f, 0.4f, 1.0f, 0.5f);
+    glLineWidth(2.0f);
+    if (robot.trail.size() > 1) {
+        glBegin(GL_LINE_STRIP);
+        for (auto& v : robot.trail) { float x, y; toScreen(v, x, y); glVertex2f(x, y); }
+        glEnd();
+    }
 
-    window_width = mode->width;
-    window_height = mode->height;
+    glColor3f(0.0f, 0.8f, 0.2f); drawCircle(goal, 0.3f);
+    glColor3f(0.0f, 0.4f, 1.0f); drawCircle(robot.pos, RADIUS);
+    glColor3f(1.0f, 1.0f, 1.0f); drawCircle(robot.pos, 0.05f);
+}
 
-    GLFWwindow* window =
-        glfwCreateWindow(window_width,window_height,"Tangent Bug",NULL,NULL);
+// Utilidades de entrada
 
-    if(!window)
-        return -1;
+Vec2 s2w(double sx, double sy) {
+    return { (float)(sx / W) * 2 * WORLD - WORLD,
+             (float)((H - sy) / H) * 2 * WORLD - WORLD };
+}
 
-    glfwMakeContextCurrent(window);
+void mouseBtn(GLFWwindow* w, int btn, int act, int) {
+    if (!drawing) return;
+    if (btn == GLFW_MOUSE_BUTTON_LEFT && act == GLFW_PRESS) {
+        double x, y; glfwGetCursorPos(w, &x, &y);
+        building.push_back(s2w(x, y));
+    }
+}
 
-    glfwSetMouseButtonCallback(window,mouseCallback);
-    glfwSetKeyCallback(window,keyCallback);
-    glfwSetFramebufferSizeCallback(window,framebuffer_size_callback);
+void keyBtn(GLFWwindow*, int key, int, int act, int) {
+    if (act != GLFW_PRESS) return;
+    if (key == GLFW_KEY_C && building.size() >= 3) {
+        obstacles.push_back({building}); building.clear();
+    }
+    if (key == GLFW_KEY_ENTER) drawing = false;
+    if (key == GLFW_KEY_R) {
+        obstacles.clear(); building.clear(); drawing = true;
+        robot = Robot{};
+    }
+}
 
-    if(!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
-        return -1;
+int main() {
+    glfwInit();
+    GLFWwindow* win = glfwCreateWindow(W, H, "Tangent Bug", NULL, NULL);
+    glfwMakeContextCurrent(win);
+    glfwSetMouseButtonCallback(win, mouseBtn);
+    glfwSetKeyCallback(win, keyBtn);
+    glMatrixMode(GL_PROJECTION); glLoadIdentity(); glOrtho(0, W, H, 0, -1, 1);
+    glEnable(GL_BLEND); glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    glViewport(0,0,window_width,window_height);
-
-    Shader shader;
-    shader.init("../shaders/vertex.vs","../shaders/fragment.fs");
-    shader.use();
-
-    float aspect = (float)window_width / (float)window_height;
-
-    glm::mat4 projection = glm::ortho(
-        aspect*-10.0f,
-        aspect*10.0f,
-        -10.0f,
-        10.0f,
-        -1.0f,
-        1.0f
-    );
-
-    glm::mat4 view = glm::mat4(1.0f);
-
-    ShapeData circleData = createCircle(1.0f,32);
-
-    Renderer* circleRenderer =
-        new Renderer(circleData.vertices,circleData.indices);
-
-    Entity goal =
-    {
-        EntityType::GOAL,
-        circleRenderer,
-        glm::vec2(12,8),
-        0,
-        0.5,
-        glm::vec3(0,0.7f,0),
-        ShapeType::CIRCLE,
-        circleData
-    };
-
-    Entity robot =
-    {
-        EntityType::ROBOT,
-        circleRenderer,
-        glm::vec2(-12,-9),
-        0,
-        0.5,
-        glm::vec3(1,1,0),
-        ShapeType::CIRCLE,
-        circleData
-    };
-
-    float lastFrame = 0.0f;
-
-    while(!glfwWindowShouldClose(window))
-    {
-
-        glClearColor(0.1f,0.1f,0.1f,1.0f);
-        glClear(GL_COLOR_BUFFER_BIT);
-        float currentFrame = glfwGetTime();
-        float deltaTime = currentFrame - lastFrame;
-        lastFrame = currentFrame;
-		
-		auto scan = controller.sensor.scan(robot.position,obstacles);
-		for(auto& r : scan)
-		{
-
-			glm::vec2 end = r.point;
-
-			float lineVertices[] =
-			{
-				robot.position.x, robot.position.y,
-				end.x, end.y
-			};
-		}
-
-        controller.update(robot,goal,obstacles,deltaTime);
-
-        glm::mat4 viewProj = projection * view;
-
-        for(auto& obs : obstacles)
-        {
-            obs.updateWorldVertices();
-            obs.draw(shader.ID,viewProj);
-        }
-
-        goal.draw(shader.ID,viewProj);
-        robot.draw(shader.ID,viewProj);
-
-        glfwSwapBuffers(window);
+    while (!glfwWindowShouldClose(win)) {
         glfwPollEvents();
+        if (!drawing) robot.update();
+        glClearColor(0.1f, 0.1f, 0.12f, 1);
+        glClear(GL_COLOR_BUFFER_BIT);
+        drawScene();
+        glfwSwapBuffers(win);
     }
-
     glfwTerminate();
-
-    return 0;
 }
