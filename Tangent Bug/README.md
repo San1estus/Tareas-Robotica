@@ -33,3 +33,8 @@ El simulador tiene 2 modos, uno para dibujar y otro para correr. Dando click en 
 
 ## Video demostración
 En el primero se muestra un caso simple, un caso con múltiples obstáculos, un caso con un obstáculo concavo y un caso dónde no hay solución, en este caso el robot se detiene.
+
+
+
+https://github.com/user-attachments/assets/2e8b5277-8299-423d-9a09-ba882069d47e
+
